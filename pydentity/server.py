@@ -1,5 +1,6 @@
 from flask import Flask, redirect
 from flask.ext.admin import Admin, AdminIndexView, expose
+from flask.ext.restful import Api
 
 class AdminHomeView(AdminIndexView):
     @expose('/')
@@ -8,6 +9,7 @@ class AdminHomeView(AdminIndexView):
 
 APP = Flask(__name__)
 ADMIN = Admin(APP, name="pydentity", index_view=AdminHomeView())
+API1 = Api(APP, prefix='/api/v1')
 
 @APP.route('/')
 def index():
@@ -21,6 +23,11 @@ def add_admin_views():
     ADMIN.add_view(views.admin_samba.AdminUsersView(name="Users",
                                                     endpoint="users"))
 
+def add_api_resources():
+    from pydentity import resources
+    API1.add_resource(resources.users.UserListResource, '/users')
+
 def run(server_args):
     add_admin_views()
+    add_api_resources()
     APP.run(**server_args.__dict__)

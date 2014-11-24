@@ -1,6 +1,25 @@
 #!/usr/bin/env python
 
+import logging
+
+from argparse import ArgumentParser
+
 import pydentity.server
 
+PARSER = ArgumentParser(description="Web IAM for Samba4")
+PARSER.add_argument("--host",
+                    help="Interface to listen on")
+PARSER.add_argument("--port", "-p", type=int,
+                    help="Port to listen on")
+PARSER.add_argument("--debug", type=bool, default=False,
+                    help="Turn debug mode on")
+
+def main():
+    args = PARSER.parse_args()
+    logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                        level=logging.INFO,
+                        )
+    pydentity.server.run(args)
+
 if __name__ == '__main__':
-    pydentity.server.run()
+    main()

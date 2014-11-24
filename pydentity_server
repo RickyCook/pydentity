@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import pydentity.server
+
+if __name__ == '__main__':
+    pydentity.server.run()

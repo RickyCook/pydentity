@@ -1,0 +1,12 @@
+Twisted==14.0.2
+cffi==0.8.6
+cryptography==0.6.1
+ldaptor==14.0
+pyOpenSSL==0.14
+pycparser==2.10
+pycrypto==2.6.1
+pydentity==0.0.1
+pyparsing==2.0.3
+six==1.8.0
+wsgiref==0.1.2
+zope.interface==4.1.1

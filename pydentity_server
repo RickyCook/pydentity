@@ -12,12 +12,12 @@ PARSER.add_argument("--host",
 PARSER.add_argument("--port", "-p", type=int,
                     help="Port to listen on")
 
-PARSER.add_argument("--smbdomain", required=True,
+PARSER.add_argument("--smbdomain", required=True, metavar="DOMAIN",
                     help="Samba domain to use")
-PARSER.add_argument("--smbconf", default="/etc/samba/smb.conf",
+PARSER.add_argument("--smbconf", default="/etc/samba/smb.conf", metavar="FILE",
                     help="Samba config file to load details from")
 
-PARSER.add_argument("--debug", type=bool, default=False,
+PARSER.add_argument("--debug", default=False, action='store_true',
                     help="Turn debug mode on")
 
 def main():

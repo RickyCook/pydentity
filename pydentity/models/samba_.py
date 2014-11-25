@@ -48,9 +48,16 @@ class Domain(object):
         Helper for child list properties
         """
         return [
-            child_class(self, user_obj.name.string)
+            child_class(self, user_obj.name.string, user_obj.idx)
             for user_obj in samba_obj_func().entries
         ]
+
+    def _child_iter_property_helper(self, samba_obj_iter, child_class):
+        """
+        Helper for child iterator properties
+        """
+        for samba_obj in samba_obj_iter:
+            yield child_class(self, samba_obj.name.string, samba_obj.idx)
 
     @property
     def users(self):
@@ -59,6 +66,16 @@ class Domain(object):
         """
         return self._child_property_helper(
             lambda: self.samr_handle.get_domain_users_obj(self.domain_obj),
+            User,
+        )
+
+    def users_iter(self, rid=-1):
+        """
+        Iterator for users associated with this domain, starting after the
+        given RID
+        """
+        return self._child_iter_property_helper(
+            self.samr_handle.get_domain_users_obj_iter(self.domain_obj, rid),
             User,
         )
 
@@ -72,6 +89,16 @@ class Domain(object):
             Group,
         )
 
+    def groups_iter(self, rid=-1):
+        """
+        Iterator for groups associated with this domain, starting after the
+        given RID
+        """
+        return self._child_iter_property_helper(
+            self.samr_handle.get_domain_groups_obj_iter(self.domain_obj, rid),
+            User,
+        )
+
     @property
     def aliases(self):
         """
@@ -80,6 +107,16 @@ class Domain(object):
         return self._child_property_helper(
             lambda: self.samr_handle.get_domain_aliases_obj(self.domain_obj),
             Alias,
+        )
+
+    def aliases_iter(self, rid=-1):
+        """
+        Iterator for aliases associated with this domain, starting after the
+        given RID
+        """
+        return self._child_iter_property_helper(
+            self.samr_handle.get_domain_aliases_obj_iter(self.domain_obj, rid),
+            User,
         )
 
     def __repr__(self):
@@ -92,9 +129,10 @@ class DomainChild(object):
     """
     Base class for domain children
     """
-    def __init__(self, domain, name):
+    def __init__(self, domain, name, rid):
         self._domain = domain
         self._name = name
+        self._rid = rid
 
     @property
     def domain(self):
@@ -109,6 +147,13 @@ class DomainChild(object):
         Username
         """
         return self._name
+
+    @property
+    def rid(self):
+        """
+        Relative identifier
+        """
+        return self._rid
 
     def __repr__(self):
         return self.__unicode__()

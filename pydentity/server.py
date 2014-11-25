@@ -25,7 +25,9 @@ def add_admin_views():
 
 def add_api_resources():
     from pydentity import resources
-    API1.add_resource(resources.users.UserListResource, '/users')
+    API1.add_resource(resources.aliases.AliasesListResource, '/aliases')
+    API1.add_resource(resources.groups.GroupsListResource, '/groups')
+    API1.add_resource(resources.users.UsersListResource, '/users')
 
 def setup_samba(app_args):
     from pydentity.samba_util import SAMRHandle

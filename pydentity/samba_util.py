@@ -72,3 +72,11 @@ class SAMRHandle(object):
         """
         # EnumDomainUsers returns (resume handle, users obj, count)
         return self.connection_obj.EnumDomainUsers(domain_obj, 0, 0, -1)[1]
+
+    def get_domain_groups_obj(self, domain_obj):
+        """
+        Get a SamArray object, contaning groups for the given policy_handle
+        domain object
+        """
+        # EnumDomainGroups returns (resume handle, groups obj, count)
+        return self.connection_obj.EnumDomainGroups(domain_obj, 0, -1)[1]

@@ -43,16 +43,34 @@ class Domain(object):
 
         return self._domain_obj
 
+    def _child_property_helper(self, samba_obj_func, child_class):
+        """
+        Helper for child list properties
+        """
+        return [
+            child_class(self, user_obj.name.string)
+            for user_obj in samba_obj_func().entries
+        ]
+
     @property
     def users(self):
         """
         List of users associated with this domain
         """
-        users_obj = self.samr_handle.get_domain_users_obj(self.domain_obj)
-        return [
-            User(self, user_obj.name.string)
-            for user_obj in users_obj.entries
-        ]
+        return self._child_property_helper(
+            lambda: self.samr_handle.get_domain_users_obj(self.domain_obj),
+            User,
+        )
+
+    @property
+    def groups(self):
+        """
+        List of groups associated with this domain
+        """
+        return self._child_property_helper(
+            lambda: self.samr_handle.get_domain_groups_obj(self.domain_obj),
+            Group,
+        )
 
     def __repr__(self):
         return self.__unicode__()
@@ -60,9 +78,9 @@ class Domain(object):
         return u"<%s: %s>" % (self.__class__.__name__, self.name)
 
 
-class User(object):
+class DomainChild(object):
     """
-    A Samba domain user
+    Base class for domain children
     """
     def __init__(self, domain, name):
         self._domain = domain
@@ -88,3 +106,16 @@ class User(object):
         return u"<%s: %s/%s>" % (self.__class__.__name__,
                                  self.domain.name,
                                  self.name)
+
+class User(DomainChild):
+    """
+    A Samba domain user
+    """
+    pass
+
+
+class Group(DomainChild):
+    """
+    A Samba domain group
+    """
+    pass

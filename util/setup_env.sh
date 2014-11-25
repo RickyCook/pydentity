@@ -1,5 +1,5 @@
-#!/bin/sh
-PROJECT_DIR="$(cd $(dirname $0)/..; pwd)"
+#!/bin/bash
+PROJECT_DIR="$(cd $(dirname $BASH_SOURCE)/..; pwd)"
 ENV_DIR="$PROJECT_DIR/python_env"
 
 virtualenv $ENV_DIR \

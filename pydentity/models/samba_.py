@@ -72,6 +72,16 @@ class Domain(object):
             Group,
         )
 
+    @property
+    def aliases(self):
+        """
+        List of aliases associated with this domain
+        """
+        return self._child_property_helper(
+            lambda: self.samr_handle.get_domain_aliases_obj(self.domain_obj),
+            Alias,
+        )
+
     def __repr__(self):
         return self.__unicode__()
     def __unicode__(self):
@@ -117,5 +127,12 @@ class User(DomainChild):
 class Group(DomainChild):
     """
     A Samba domain group
+    """
+    pass
+
+
+class Alias(DomainChild):
+    """
+    A Samba domain alias
     """
     pass

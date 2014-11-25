@@ -80,3 +80,11 @@ class SAMRHandle(object):
         """
         # EnumDomainGroups returns (resume handle, groups obj, count)
         return self.connection_obj.EnumDomainGroups(domain_obj, 0, -1)[1]
+
+    def get_domain_aliases_obj(self, domain_obj):
+        """
+        Get a SamArray object, contaning aliases for the given policy_handle
+        domain object
+        """
+        # EnumDomainAliases returns (resume handle, groups obj, count)
+        return self.connection_obj.EnumDomainAliases(domain_obj, 0, -1)[1]

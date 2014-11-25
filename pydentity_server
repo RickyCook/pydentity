@@ -11,6 +11,12 @@ PARSER.add_argument("--host",
                     help="Interface to listen on")
 PARSER.add_argument("--port", "-p", type=int,
                     help="Port to listen on")
+
+PARSER.add_argument("--smbdomain", required=True,
+                    help="Samba domain to use")
+PARSER.add_argument("--smbconf", default="/etc/samba/smb.conf",
+                    help="Samba config file to load details from")
+
 PARSER.add_argument("--debug", type=bool, default=False,
                     help="Turn debug mode on")
 

@@ -27,7 +27,21 @@ def add_api_resources():
     from pydentity import resources
     API1.add_resource(resources.users.UserListResource, '/users')
 
-def run(server_args):
+def setup_samba(app_args):
+    from pydentity.samba_util import SAMRHandle
+    from pydentity.models.samba_ import Domain
+
+    APP.samr_handle = SAMRHandle(conf_file=app_args.smbconf)
+    APP.domain_model = Domain(app_args.smbdomain, APP.samr_handle)
+
+def run(app_args):
+    setup_samba(app_args)
     add_admin_views()
     add_api_resources()
-    APP.run(**server_args.__dict__)
+
+    server_args = {
+        key: val
+        for key, val in app_args.__dict__.items()
+        if key in ('host', 'port', 'debug')
+    }
+    APP.run(**server_args)

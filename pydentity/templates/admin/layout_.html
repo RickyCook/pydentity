@@ -1,0 +1,14 @@
+{% import 'admin/layout.html' as layout with context -%}
+{% extends 'admin/base.html' %}
+
+{% block head_tail %}
+    {{ super() }}
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.4/angular.min.js"></script>
+    <script src="{{ url_for('static', filename='js/controllers.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="container" ng-app="pydentity">
+        {% block app_body %}{% endblock %}
+    </div>
+{% endblock %}

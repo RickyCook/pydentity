@@ -1,0 +1,21 @@
+{% extends 'admin/master.html' %}
+{% block app_body %}
+    <div class="row"><div class="span6"><h1>All {{ endpoint|title }}</h1></div></div>
+    <div ng-controller="ObjectsListController" ng-init="load_endpoint('{{ endpoint|lower }}')">{% raw %}
+        <table class="table table-striped">
+        <tr>
+            <th class="span1" ng-click="orderProp = 'rid'">RID <i class="icon-arrow-down" ng-if="orderProp == 'rid'"></i></th>
+            <th ng-click="orderProp = 'name'">Name <i class="icon-arrow-down" ng-if="orderProp == 'name'"></i></th>
+        </tr>
+        <tr ng-show="loading"><td colspan=2><div class="container-fluid"><div class="row-fluid">
+            <div class="span4 offset4"><div class="progress progress-striped active">
+                <div class="bar" style="width: 100%">Loading...</div>
+            </div></div>
+        </div></div></td></tr>
+        <tr ng-repeat="object in objects | orderBy:orderProp">
+            <td>{{ object.rid }}</td>
+            <td>{{ object.name }}</td>
+        </tr>
+        </table>
+    {% endraw %}</div>
+{% endblock %}

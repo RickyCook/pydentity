@@ -8,7 +8,10 @@ class AdminHomeView(AdminIndexView):
         return self.render('admin/index.html')
 
 APP = Flask(__name__)
-ADMIN = Admin(APP, name="pydentity", index_view=AdminHomeView())
+ADMIN = Admin(APP,
+              name="pydentity",
+              index_view=AdminHomeView(),
+              base_template='admin/layout_.html')
 API1 = Api(APP, prefix='/api/v1')
 
 @APP.route('/')
@@ -19,9 +22,10 @@ def index():
     return redirect(ADMIN.url)
 
 def add_admin_views():
-    from pydentity import views
-    ADMIN.add_view(views.admin_samba.AdminUsersView(name="Users",
-                                                    endpoint="users"))
+    from pydentity.views.admin_samba import AdminObjectsListView
+    ADMIN.add_view(AdminObjectsListView(name="Users", endpoint="users"))
+    ADMIN.add_view(AdminObjectsListView(name="Groups", endpoint="groups"))
+    ADMIN.add_view(AdminObjectsListView(name="Aliases", endpoint="aliases"))
 
 def add_api_resources():
     from pydentity import resources

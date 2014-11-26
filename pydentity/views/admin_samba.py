@@ -3,7 +3,7 @@ from flask.ext.admin import BaseView, expose
 
 from pydentity.server import ADMIN
 
-class AdminUsersView(BaseView):
+class AdminObjectsListView(BaseView):
     @expose('/')
-    def users_list_view(self):
-        return self.render('admin/users_list.html')
+    def index(self):
+        return self.render('admin/objects_list.html', endpoint=self.endpoint)

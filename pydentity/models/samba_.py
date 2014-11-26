@@ -82,87 +82,47 @@ class Domain(PolicyHandleObject):
 
         return self._sid_obj
 
-    def _child_property_helper(self, samba_obj_func, child_class):
-        """
-        Helper for child list properties
-        """
-        return [
-            child_class(self, user_obj.name.string, user_obj.idx)
-            for user_obj in samba_obj_func().entries
-        ]
-
-    def _child_iter_property_helper(self, samba_obj_iter, child_class):
-        """
-        Helper for child iterator properties
-        """
-        for samba_obj in samba_obj_iter:
-            yield child_class(self, samba_obj.name.string, samba_obj.idx)
-
     @property
     def users(self):
         """
         List of users associated with this domain
         """
-        return self._child_property_helper(
-            lambda: self.samr_handle.get_domain_users_obj(
-                self.policy_handle_obj
-            ), User,
-        )
+        return User.all_in_domain(self)
 
-    def users_iter(self, rid=-1):
+    def users_iter(self, rid=None):
         """
         Iterator for users associated with this domain, starting after the
         given RID
         """
-        return self._child_iter_property_helper(
-            self.samr_handle.get_domain_users_obj_iter(
-                self.policy_handle_obj, rid
-            ), User,
-        )
+        return User.all_in_domain_iter(self, rid)
 
     @property
     def groups(self):
         """
         List of groups associated with this domain
         """
-        return self._child_property_helper(
-            lambda: self.samr_handle.get_domain_groups_obj(
-                self.policy_handle_obj,
-            ), Group,
-        )
+        return Group.all_in_domain(self)
 
-    def groups_iter(self, rid=-1):
+    def groups_iter(self, rid=None):
         """
         Iterator for groups associated with this domain, starting after the
         given RID
         """
-        return self._child_iter_property_helper(
-            self.samr_handle.get_domain_groups_obj_iter(
-                self.policy_handle_obj, rid,
-            ), Group,
-        )
+        return Group.all_in_domain_iter(self, rid)
 
     @property
     def aliases(self):
         """
         List of aliases associated with this domain
         """
-        return self._child_property_helper(
-            lambda: self.samr_handle.get_domain_aliases_obj(
-                self.policy_handle_obj,
-            ), Alias,
-        )
+        return Alias.all_in_domain(self)
 
-    def aliases_iter(self, rid=-1):
+    def aliases_iter(self, rid=None):
         """
         Iterator for aliases associated with this domain, starting after the
         given RID
         """
-        return self._child_iter_property_helper(
-            self.samr_handle.get_domain_aliases_obj_iter(
-                self.policy_handle_obj, rid,
-            ), Alias,
-        )
+        return Alias.all_in_domain_iter(self, rid)
 
     def __repr__(self):
         return self.__unicode__()
@@ -178,6 +138,10 @@ class DomainChild(PolicyHandleObject):
         self._domain = domain
         self._name = name
         self._rid = rid
+
+    @classmethod
+    def plural_name(cls):
+        return "%ss" % cls.__name__
 
     @property
     def domain(self):
@@ -210,6 +174,61 @@ class DomainChild(PolicyHandleObject):
     def canonical_id(self):
         return self.rid
 
+    @classmethod
+    def _domain_enum(cls, enum_func, domain, resume_handle=0, size=-1):
+        """
+        Low level wrapper around enumeration of domain children
+        """
+        return enum_func(domain.policy_handle_obj, resume_handle, size)
+
+    @classmethod
+    def _domain_enum_func(cls, samr_handle):
+        """
+        Low level domain enumeration function for this type
+        """
+        return getattr(samr_handle.connection_obj,
+                       'EnumDomain%s' % cls.plural_name())
+
+
+    @classmethod
+    def all_in_domain(cls, domain):
+        """
+        Gets all objects of this type in the given domain
+        """
+        # EnumDomain{X} returns (resume handle, array obj, count)
+        sam_array = cls._domain_enum(
+            cls._domain_enum_func(domain.samr_handle), domain,
+        )[1]
+
+        return [
+            cls(domain, entry.name.string, entry.idx)
+            for entry in sam_array.entries
+        ]
+
+    @classmethod
+    def all_in_domain_iter(cls, domain, resume_handle=None):
+        """
+        Gets objects after the given RID (resume_handle) of this type in the
+        given domain, as an iterator
+        """
+        while resume_handle or resume_handle is None:
+            # First iter default arg
+            if resume_handle is None:
+                resume_handle = 0
+
+            resume_handle, entries_obj, count = cls._domain_enum(
+                cls._domain_enum_func(domain.samr_handle),
+                domain,
+                resume_handle,
+                1,
+            )
+
+            assert count <= 1, "No more than 1 object retrieved"
+
+            if count == 1:
+                entry_obj = entries_obj.entries.pop()
+                yield cls(domain, entry_obj.name.string, entry_obj.idx)
+
     def __repr__(self):
         return self.__unicode__()
     def __unicode__(self):
@@ -222,7 +241,10 @@ class User(DomainChild):
     """
     A Samba domain user
     """
-    pass
+    @classmethod
+    def _domain_enum(cls, enum_func, domain, resume_handle=0, size=-1):
+        # user takes an additional arg
+        return enum_func(domain.policy_handle_obj, resume_handle, 0, size)
 
 
 class Group(DomainChild):
@@ -236,4 +258,6 @@ class Alias(DomainChild):
     """
     A Samba domain alias
     """
-    pass
+    @classmethod
+    def plural_name(cls):
+        return "Aliases"

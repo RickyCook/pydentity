@@ -10,7 +10,7 @@ RID_OBJECTS_FIELDS = {
 }
 
 PAGINATED_RID_LIST_PARSER = reqparse.RequestParser()
-PAGINATED_RID_LIST_PARSER.add_argument("rid", type=int, default=-1,
+PAGINATED_RID_LIST_PARSER.add_argument("rid", type=int, default=None,
                                        help="RID to start page after")
 PAGINATED_RID_LIST_PARSER.add_argument("limit", type=int, default=20,
                                        help="Limit objects returned")

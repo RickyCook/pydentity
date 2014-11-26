@@ -1,8 +1,6 @@
 
 from flask.ext.admin import BaseView, expose
 
-from pydentity.server import ADMIN
-
 class AdminObjectsListView(BaseView):
     @expose('/')
     def index(self):

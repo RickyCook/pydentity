@@ -48,7 +48,7 @@ class SAMRHandle(object):
             self._connection_obj = get_connection_obj(conf_file)
 
     @property
-    def handle_obj(self):
+    def policy_handle_obj(self):
         """
         Samba policy_handle connection object
         """
@@ -73,15 +73,7 @@ class SAMRHandle(object):
         domainname_lsa = lsa.String()
         domainname_lsa.string = unicode(domainname)
         return self.connection_obj.LookupDomain(
-            self.handle_obj, domainname_lsa,
-        )
-
-    def get_domain_obj(self, sid_obj):
-        """
-        Get a Samba policy_handle domain object for the given dom_sid object
-        """
-        return self.connection_obj.OpenDomain(
-            self.handle_obj, SECURITY_FLAG, sid_obj
+            self.policy_handle_obj, domainname_lsa,
         )
 
     def get_domain_users_obj(self, domain_obj):

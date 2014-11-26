@@ -1,9 +1,55 @@
-class Domain(object):
+from pydentity.samba_util import SECURITY_FLAG
+
+class PolicyHandleObject(object):
+    """
+    Mixin for objects that have policy_handle objects associated with them
+    """
+    _policy_handle_obj = None
+
+    @property
+    def samr_handle(self):
+        """
+        SAMRHandle used to retrieve this object
+        """
+        raise NotImplementedError("Must override samr_handle")
+
+    @property
+    def parent_handle(self):
+        """
+        Parent policy_handle object
+        """
+        raise NotImplementedError("Must override parent_handle")
+
+    @property
+    def canonical_id(self):
+        """
+        The RID/SID/<X>ID for this object
+        """
+        raise NotImplementedError("Must override canonical_id")
+
+    @property
+    def policy_handle_obj(self):
+        """
+        Samba policy_handle object
+        """
+        if not self._policy_handle_obj:
+            self._policy_handle_obj = getattr(
+                self.samr_handle.connection_obj,
+                'Open%s' % self.__class__.__name__,
+            )(
+                self.parent_handle,
+                SECURITY_FLAG,
+                self.canonical_id,
+            )
+
+        return self._policy_handle_obj
+
+
+class Domain(PolicyHandleObject):
     """
     A Samba domain
     """
     _sid_obj = None
-    _domain_obj = None
 
     def __init__(self, name, samr_handle):
         self._name = name
@@ -18,10 +64,13 @@ class Domain(object):
 
     @property
     def samr_handle(self):
-        """
-        SAMRHandle used to retrieve this Domain
-        """
         return self._samr_handle
+    @property
+    def parent_handle(self):
+        return self.samr_handle.policy_handle_obj
+    @property
+    def canonical_id(self):
+        return self.sid_obj
 
     @property
     def sid_obj(self):
@@ -32,16 +81,6 @@ class Domain(object):
             self._sid_obj = self.samr_handle.get_domain_sid_obj(self.name)
 
         return self._sid_obj
-
-    @property
-    def domain_obj(self):
-        """
-        Samba policy_handle domain object
-        """
-        if not self._domain_obj:
-            self._domain_obj = self.samr_handle.get_domain_obj(self.sid_obj)
-
-        return self._domain_obj
 
     def _child_property_helper(self, samba_obj_func, child_class):
         """
@@ -65,8 +104,9 @@ class Domain(object):
         List of users associated with this domain
         """
         return self._child_property_helper(
-            lambda: self.samr_handle.get_domain_users_obj(self.domain_obj),
-            User,
+            lambda: self.samr_handle.get_domain_users_obj(
+                self.policy_handle_obj
+            ), User,
         )
 
     def users_iter(self, rid=-1):
@@ -75,8 +115,9 @@ class Domain(object):
         given RID
         """
         return self._child_iter_property_helper(
-            self.samr_handle.get_domain_users_obj_iter(self.domain_obj, rid),
-            User,
+            self.samr_handle.get_domain_users_obj_iter(
+                self.policy_handle_obj, rid
+            ), User,
         )
 
     @property
@@ -85,8 +126,9 @@ class Domain(object):
         List of groups associated with this domain
         """
         return self._child_property_helper(
-            lambda: self.samr_handle.get_domain_groups_obj(self.domain_obj),
-            Group,
+            lambda: self.samr_handle.get_domain_groups_obj(
+                self.policy_handle_obj,
+            ), Group,
         )
 
     def groups_iter(self, rid=-1):
@@ -95,8 +137,9 @@ class Domain(object):
         given RID
         """
         return self._child_iter_property_helper(
-            self.samr_handle.get_domain_groups_obj_iter(self.domain_obj, rid),
-            User,
+            self.samr_handle.get_domain_groups_obj_iter(
+                self.policy_handle_obj, rid,
+            ), Group,
         )
 
     @property
@@ -105,8 +148,9 @@ class Domain(object):
         List of aliases associated with this domain
         """
         return self._child_property_helper(
-            lambda: self.samr_handle.get_domain_aliases_obj(self.domain_obj),
-            Alias,
+            lambda: self.samr_handle.get_domain_aliases_obj(
+                self.policy_handle_obj,
+            ), Alias,
         )
 
     def aliases_iter(self, rid=-1):
@@ -115,8 +159,9 @@ class Domain(object):
         given RID
         """
         return self._child_iter_property_helper(
-            self.samr_handle.get_domain_aliases_obj_iter(self.domain_obj, rid),
-            User,
+            self.samr_handle.get_domain_aliases_obj_iter(
+                self.policy_handle_obj, rid,
+            ), Alias,
         )
 
     def __repr__(self):
@@ -125,7 +170,7 @@ class Domain(object):
         return u"<%s: %s>" % (self.__class__.__name__, self.name)
 
 
-class DomainChild(object):
+class DomainChild(PolicyHandleObject):
     """
     Base class for domain children
     """
@@ -155,12 +200,23 @@ class DomainChild(object):
         """
         return self._rid
 
+    @property
+    def samr_handle(self):
+        return self.domain.samr_handle
+    @property
+    def parent_handle(self):
+        return self.domain.policy_handle_obj
+    @property
+    def canonical_id(self):
+        return self.rid
+
     def __repr__(self):
         return self.__unicode__()
     def __unicode__(self):
         return u"<%s: %s/%s>" % (self.__class__.__name__,
                                  self.domain.name,
                                  self.name)
+
 
 class User(DomainChild):
     """

@@ -1,0 +1,32 @@
+{% extends 'admin/master.html' %}
+{% block app_body %}
+    <h2>Meta</h2>
+    <div class="form-horizontal">
+    {% for meta_name, meta_val in object_meta.iteritems() %}
+        <div class="control-group">
+            <span class="control-label">{{ meta_name|title }}</span>
+            <div class="controls">
+                {{ meta_val }}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+    {% for attr_type, attr_names in grouped_attrs.iteritems() %}
+        <h2>{{ attr_type }}</h2>
+        <div class="row">
+            {% for attr_name in attr_names %}
+                <div class="span4">
+                    {% if attr_type == 'module' %}
+                        {% with new_module_name = "%s.%s" % (module_name, attr_name) %}
+                            <a href="{{ url_for('debug_api_browse.module_detail', module_name=new_module_name) }}">{{ attr_name }}</a>
+                        {% endwith %}
+                    {% else %}
+                        {% with new_object_path = attr_name if not object_path else "%s/%s" % (object_path, attr_name) %}
+                            <a href="{{ url_for('debug_api_browse.attr_detail', module_name=module_name, object_path=new_object_path) }}">{{ attr_name }}</a>
+                        {% endwith %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}

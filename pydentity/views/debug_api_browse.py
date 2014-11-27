@@ -1,14 +1,14 @@
 import importlib
 import logging
-import re
 import urllib
 
 from flask import redirect, url_for
 from flask.ext.admin import BaseView, expose
 
+from pydentity.util import SYSTEM_PROPERTY_RE
+
 IGNORED_OBJECT_NAMES = ('__builtins__',)
-BUILTIN_TYPES = (str, unicode, int, long, float, type(None))
-SYSTEM_PROPERTY_RE = re.compile(r'^__(.+)__$')
+BUILTIN_TYPES = (str, unicode, int, long, float, type, type(None))
 
 def group_attrs(obj):
     """

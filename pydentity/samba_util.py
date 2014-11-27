@@ -1,3 +1,5 @@
+import logging
+
 from samba.dcerpc import lsa, samr, security
 
 SECURITY_FLAG = security.SEC_FLAG_MAXIMUM_ALLOWED
@@ -12,6 +14,20 @@ def get_connection_obj(conf_file):
         CONNECTIONS[conf_file] = samr.samr('ncalrpc:', conf_file)
 
     return CONNECTIONS[conf_file]
+
+def lsa_unwrap(value):
+    """
+    Unwraps a possible LSA value as best we can
+    """
+    if isinstance(value, lsa.String):
+        return value.string
+    if isinstance(value, lsa.BinaryString):
+        return value.array
+
+    if value.__class__.__module__ == 'lsa':
+        logging.warn("Unknown LSA type: %s", value.__class__.__name__)
+
+    return value
 
 class SAMRHandle(object):
     """

@@ -1,10 +1,25 @@
-from pydentity.samba_util import SECURITY_FLAG
+import logging
+
+from samba.dcerpc import lsa
+from samba.dcerpc.samr import (
+    ALIASINFOALL,
+    DomainGeneralInformation,
+    DomainGeneralInformation2,
+    DomainModifiedInformation,
+    DomainPasswordInformation,
+    GROUPINFOALL,
+    UserAllInformation,
+)
+
+from pydentity.samba_util import SECURITY_FLAG, lsa_unwrap
+from pydentity.util import SYSTEM_PROPERTY_RE
 
 class PolicyHandleObject(object):
     """
     Mixin for objects that have policy_handle objects associated with them
     """
     _policy_handle_obj = None
+    _attrs = None
 
     @property
     def samr_handle(self):
@@ -28,6 +43,13 @@ class PolicyHandleObject(object):
         raise NotImplementedError("Must override canonical_id")
 
     @property
+    def all_info_class_level(self):
+        """
+        The information class level to retrieve all info for this policy object
+        """
+        raise NotImplementedError("Must override all_info_class_level")
+
+    @property
     def policy_handle_obj(self):
         """
         Samba policy_handle object
@@ -44,12 +66,48 @@ class PolicyHandleObject(object):
 
         return self._policy_handle_obj
 
+    @property
+    def attrs(self):
+        """
+        Lazy loaded dict of the args from the policy object
+        """
+        if not self._attrs:
+            request_levels = self.all_info_class_level
+            if not isinstance(request_levels, (list, tuple)):
+                request_levels = (request_levels,)
+
+            attrs = {}
+            for request_level in request_levels:
+                info_obj = getattr(
+                    self.samr_handle.connection_obj,
+                    'Query%sInfo' % self.__class__.__name__,
+                )(
+                    self.policy_handle_obj,
+                    request_level,
+                )
+
+                attrs.update({
+                    attr_name: lsa_unwrap(getattr(info_obj, attr_name))
+                    for attr_name in dir(info_obj)
+                    if not SYSTEM_PROPERTY_RE.match(attr_name)
+                })
+
+            self._attrs = attrs
+
+        return self._attrs
+
 
 class Domain(PolicyHandleObject):
     """
     A Samba domain
     """
     _sid_obj = None
+    all_info_class_level = (
+        DomainGeneralInformation,
+        DomainGeneralInformation2,
+        DomainModifiedInformation,
+        DomainPasswordInformation,
+    )
 
     def __init__(self, name, samr_handle):
         self._name = name
@@ -201,7 +259,7 @@ class DomainChild(PolicyHandleObject):
         )[1]
 
         return [
-            cls(domain, entry.name.string, entry.idx)
+            cls(domain, lsa_unwrap(entry.name), entry.idx)
             for entry in sam_array.entries
         ]
 
@@ -227,7 +285,7 @@ class DomainChild(PolicyHandleObject):
 
             if count == 1:
                 entry_obj = entries_obj.entries.pop()
-                yield cls(domain, entry_obj.name.string, entry_obj.idx)
+                yield cls(domain, lsa_unwrap(entry_obj.name), entry_obj.idx)
 
     def __repr__(self):
         return self.__unicode__()
@@ -241,6 +299,8 @@ class User(DomainChild):
     """
     A Samba domain user
     """
+    all_info_class_level = UserAllInformation
+
     @classmethod
     def _domain_enum(cls, enum_func, domain, resume_handle=0, size=-1):
         # user takes an additional arg
@@ -251,13 +311,15 @@ class Group(DomainChild):
     """
     A Samba domain group
     """
-    pass
+    all_info_class_level = GROUPINFOALL
 
 
 class Alias(DomainChild):
     """
     A Samba domain alias
     """
+    all_info_class_level = ALIASINFOALL
+
     @classmethod
     def plural_name(cls):
         return "Aliases"

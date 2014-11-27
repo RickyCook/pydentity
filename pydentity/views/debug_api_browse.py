@@ -56,6 +56,7 @@ class DebugAPIBrowseView(BaseView):
         object_meta, grouped_attrs = group_attrs(root_object)
 
         return self.render('admin/debug/api_browse.html',
+                           root_object=root_object,
                            module_name=module_name,
                            object_meta=object_meta,
                            grouped_attrs=grouped_attrs,
@@ -73,6 +74,7 @@ class DebugAPIBrowseView(BaseView):
         object_meta, grouped_attrs = group_attrs(root_object)
 
         return self.render('admin/debug/api_browse.html',
+                           root_object=root_object,
                            module_name=module_name,
                            object_path=object_path,
                            object_meta=object_meta,

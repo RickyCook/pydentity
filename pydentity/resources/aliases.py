@@ -1,6 +1,6 @@
-from pydentity.resources.base import PaginatedRIDListResource
+from pydentity.resources.base import PaginatedPolicyHandleObjectListResource
 from pydentity.server import APP
 
-class AliasesListResource(PaginatedRIDListResource):
+class AliasesListResource(PaginatedPolicyHandleObjectListResource):
     def objects_iter(self, rid):
         return APP.domain_model.aliases_iter(rid)

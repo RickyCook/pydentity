@@ -4,24 +4,24 @@ from flask.ext.restful import fields, marshal, Resource, reqparse
 
 from pydentity.resources import fields as my_fields
 
-RID_OBJECTS_FIELDS = {
+POLICY_HANDLE_OBJECT_BASIC_FIELDS = {
     'name': fields.String(),
     'rid': fields.Integer(),
 }
 
-PAGINATED_RID_LIST_PARSER = reqparse.RequestParser()
-PAGINATED_RID_LIST_PARSER.add_argument("rid", type=int, default=None,
-                                       help="RID to start page after")
-PAGINATED_RID_LIST_PARSER.add_argument("limit", type=int, default=20,
-                                       help="Limit objects returned")
+PAGINATED_POLICY_HANDLE_OBJECT_LIST_PARSER = reqparse.RequestParser()
+PAGINATED_POLICY_HANDLE_OBJECT_LIST_PARSER.add_argument(
+    "rid", type=int, default=None, help="RID to start page after")
+PAGINATED_POLICY_HANDLE_OBJECT_LIST_PARSER.add_argument(
+    "limit", type=int, default=20, help="Limit objects returned")
 
-class PaginatedRIDListResource(Resource):
+class PaginatedPolicyHandleObjectListResource(Resource):
     @property
     def objects_fields(self):
         """
         Fields structure for the objects in this list
         """
-        return RID_OBJECTS_FIELDS
+        return POLICY_HANDLE_OBJECT_BASIC_FIELDS
 
     @property
     def list_fields(self):
@@ -48,7 +48,7 @@ class PaginatedRIDListResource(Resource):
         return islice(self.objects_iter(rid), 0, limit)
 
     def get(self, **kwargs):
-        args = PAGINATED_RID_LIST_PARSER.parse_args()
+        args = PAGINATED_POLICY_HANDLE_OBJECT_LIST_PARSER.parse_args()
 
         data = {
             'objects': list(self.objects(args['rid'], args['limit'])),

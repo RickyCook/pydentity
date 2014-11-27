@@ -1,4 +1,15 @@
 {% extends 'admin/master.html' %}
 {% block body %}
-    <h1>pydentity server admin</h1>
+    <h1>"{{ domain.name }}" domain admin</h1>
+    <div>{{ domain.attrs.oem_information  }}</div>
+    <dl class="dl-horizontal">
+        <dt>Aliases</dt>
+        <dd>{{ domain.attrs.num_aliases }}</dd>
+        <dt>Groups</dt>
+        <dd>{{ domain.attrs.num_groups }}</dd>
+        <dt>Users</dt>
+        <dd>{{ domain.attrs.num_users }}</dd>
+        <dt>Min password len</dt>
+        <dd>{{ domain.attrs.min_password_length }}</dd>
+    </dl>
 {% endblock %}

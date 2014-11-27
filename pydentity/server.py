@@ -5,7 +5,7 @@ from flask.ext.restful import Api
 class AdminHomeView(AdminIndexView):
     @expose('/')
     def index(self):
-        return self.render('admin/index.html')
+        return self.render('admin/index.html', domain=APP.domain_model)
 
 APP = Flask(__name__)
 ADMIN = Admin(APP,

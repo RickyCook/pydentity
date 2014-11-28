@@ -109,6 +109,7 @@ class PolicyHandleObjectResource(Resource):
 
         # Force standard name
         data['name'] = obj.name
+        data['rid'] = object_rid
 
         # Remove blacklisted fields
         for attr_name in self.blacklisted_fields:

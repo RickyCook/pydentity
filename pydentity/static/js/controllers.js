@@ -8,6 +8,12 @@ pydentity.controller('ObjectsListController', function ($scope, $http) {
             $scope.objects = data.objects;
         });
     }
+    $scope.load_detail = function(rid, url) {
+        $http.get(url).success(function(data) {
+            $scope.detail = data
+        });
+    }
     $scope.orderProp = 'rid'
     $scope.loading = true
+    $scope.detail = null
 })

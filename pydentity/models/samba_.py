@@ -96,6 +96,20 @@ class PolicyHandleObject(object):
 
         return self._attrs
 
+    @property
+    def loaded(self):
+        """
+        Whether the attrs for this object have been loaded
+        """
+        return self._attrs is not None
+
+    @property
+    def name(self):
+        """
+        Standardized object name
+        """
+        return self.attrs['name']
+
 
 class Domain(PolicyHandleObject):
     """
@@ -115,9 +129,9 @@ class Domain(PolicyHandleObject):
 
     @property
     def name(self):
-        """
-        Domain name
-        """
+        if self.loaded:
+            return self.attrs['domain_name']
+
         return self._name
 
     @property
@@ -192,10 +206,12 @@ class DomainChild(PolicyHandleObject):
     """
     Base class for domain children
     """
-    def __init__(self, domain, name, rid):
+    name_attr = 'name'
+
+    def __init__(self, domain, rid, name=None):
         self._domain = domain
-        self._name = name
         self._rid = rid
+        self._name = name
 
     @classmethod
     def plural_name(cls):
@@ -210,10 +226,10 @@ class DomainChild(PolicyHandleObject):
 
     @property
     def name(self):
-        """
-        Username
-        """
-        return self._name
+        if self._name and not self.loaded:
+            return self._name
+
+        return self.attrs[self.name_attr]
 
     @property
     def rid(self):
@@ -259,7 +275,7 @@ class DomainChild(PolicyHandleObject):
         )[1]
 
         return [
-            cls(domain, lsa_unwrap(entry.name), entry.idx)
+            cls(domain, entry.idx, name=lsa_unwrap(entry.name))
             for entry in sam_array.entries
         ]
 
@@ -284,8 +300,8 @@ class DomainChild(PolicyHandleObject):
             assert count <= 1, "No more than 1 object retrieved"
 
             if count == 1:
-                entry_obj = entries_obj.entries.pop()
-                yield cls(domain, lsa_unwrap(entry_obj.name), entry_obj.idx)
+                entry = entries_obj.entries.pop()
+                yield cls(domain, entry.idx, name=lsa_unwrap(entry.name))
 
     def __repr__(self):
         return self.__unicode__()
@@ -300,6 +316,7 @@ class User(DomainChild):
     A Samba domain user
     """
     all_info_class_level = UserAllInformation
+    name_attr = 'account_name'
 
     @classmethod
     def _domain_enum(cls, enum_func, domain, resume_handle=0, size=-1):

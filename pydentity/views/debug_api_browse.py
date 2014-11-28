@@ -5,10 +5,10 @@ import urllib
 from flask import redirect, url_for
 from flask.ext.admin import BaseView, expose
 
-from pydentity.util import SYSTEM_PROPERTY_RE
+from pydentity.util import SYSTEM_PROPERTY_RE, SIMPLE_PRINTABLE_TYPES
 
 IGNORED_OBJECT_NAMES = ('__builtins__',)
-BUILTIN_TYPES = (str, unicode, int, long, float, type, type(None))
+PRINTABLE_TYPES = SIMPLE_PRINTABLE_TYPES + (type, type(None))
 
 def group_attrs(obj):
     """
@@ -34,7 +34,7 @@ def group_attrs(obj):
 
         if system_property_match:
             attr_type = type(attr)
-            if attr_type in BUILTIN_TYPES:
+            if attr_type in PRINTABLE_TYPES:
                 meta[system_property_match.groups()[0]] = attr
             else:
                 groups.setdefault('... more', []).append(attr_name)
